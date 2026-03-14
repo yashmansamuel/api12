@@ -2,43 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Signaturesi | Neo L1.0 Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo L1.0 | Signaturesi Developer Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
-        body { background: #020617; color: white; font-family: sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        @import url('https://fonts.googleapis.com');
+        
+        :root {
+            --neon-blue: #00d2ff;
+            --neon-purple: #9d50bb;
+            --bg-dark: #05070a;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 210, 255, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(157, 80, 187, 0.05) 0px, transparent 50%);
+            font-family: 'Space Grotesk', sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            color: var(--neon-blue);
+        }
+
+        .neon-btn {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .neon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .token-card {
+            border-left: 4px solid var(--neon-blue);
+            background: linear-gradient(90deg, rgba(0, 210, 255, 0.05), transparent);
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
-    <div class="max-w-md w-full glass p-10 rounded-3xl shadow-2xl text-center">
-        <h1 class="text-3xl font-bold text-sky-400 mb-2">Neo L1.0</h1>
-        <p class="text-slate-500 mb-8 text-sm uppercase">Developer Dashboard</p>
+<body class="flex flex-col items-center justify-center p-6">
+
+    <!-- Top Branding -->
+    <div class="mb-8 text-center">
+        <h1 class="text-4xl font-bold tracking-tighter mb-2">NEO <span class="neon-text">L1.0</span></h1>
+        <p class="text-slate-500 text-xs uppercase tracking-[0.3em]">Signaturesi Engineering</p>
+    </div>
+
+    <div class="w-full max-w-lg">
         
-        <div id="login-area">
-            <input type="password" id="userKey" class="w-full bg-black border border-slate-700 p-4 rounded-xl mb-4 text-center" placeholder="Enter API Key">
-            <button onclick="checkBal()" class="w-full bg-sky-600 hover:bg-sky-500 py-4 rounded-xl font-bold transition">Check Balance</button>
+        <!-- Login Card -->
+        <div id="login-section" class="glass-panel p-10 rounded-[2rem] text-center border-t-2 border-t-sky-500/20">
+            <div class="mb-6 flex justify-center">
+                <div class="p-4 bg-sky-500/10 rounded-full">
+                    <i class="fas fa-shield-alt text-3xl text-sky-400"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Secure Access</h2>
+            <p class="text-slate-400 text-sm mb-8">Enter your unique API key to sync with the Neo L1.0 neural network.</p>
+            
+            <input type="password" id="userKey" 
+                class="w-full bg-black/40 border border-slate-800 p-4 rounded-2xl text-center mb-6 focus:outline-none focus:border-sky-500 transition-all font-mono text-sky-300"
+                placeholder="sig-live-xxxxxxxxxxxx">
+            
+            <button onclick="checkBalance()" class="neon-btn w-full py-4 rounded-2xl font-bold text-white uppercase tracking-widest text-sm">
+                Authenticate & Connect
+            </button>
         </div>
 
-        <div id="stats-area" class="hidden space-y-6">
-            <div class="p-6 bg-slate-900 rounded-2xl border border-slate-800">
-                <p class="text-xs text-slate-500 mb-1">LIVE BALANCE</p>
-                <h2 id="bal-text" class="text-4xl font-bold text-emerald-400">0</h2>
+        <!-- Dashboard Stats (Hidden) -->
+        <div id="stats-section" class="hidden space-y-6">
+            
+            <!-- Balance Card -->
+            <div class="glass-panel p-8 rounded-[2rem] token-card">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">Compute Balance</p>
+                        <h2 id="bal-text" class="text-5xl font-bold text-white tabular-nums">0</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="status-dot mr-2"></span>
+                        <span class="text-[10px] font-bold text-emerald-400 uppercase">Live</span>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                    <span class="text-xs text-slate-500">Model Status: <b class="text-sky-400">Ready</b></span>
+                    <span id="dollar-val" class="text-xs font-bold text-slate-400">$0.00 Credit</span>
+                </div>
             </div>
-            <button onclick="location.reload()" class="text-slate-500 text-xs">Sign Out</button>
+
+            <!-- API Info -->
+            <div class="glass-panel p-6 rounded-2xl flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="bg-slate-800 p-3 rounded-xl">
+                        <i class="fas fa-code text-sky-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500">Active Endpoint</p>
+                        <p class="text-xs font-mono text-slate-300">api12-pxoi.vercel.app/v1</p>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="text-slate-500 hover:text-white transition">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+
         </div>
+
     </div>
 
     <script>
-        async function checkBal() {
-            const key = document.getElementById('userKey').value;
-            const res = await fetch(`https://api12-pxoi.vercel.app{key}`);
-            const data = await res.json();
-            if(res.ok) {
-                document.getElementById('login-area').classList.add('hidden');
-                document.getElementById('stats-area').classList.remove('hidden');
-                document.getElementById('bal-text').textContent = data.balance.toLocaleString() + " Tokens";
-            } else {
-                alert("Invalid Key!");
+        async function checkBalance() {
+            const key = document.getElementById('userKey').value.trim();
+            const balText = document.getElementById('bal-text');
+            const dollarText = document.getElementById('dollar-val');
+            
+            if(!key) {
+                alert("Please provide an API Key.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://api12-pxoi.vercel.app{key}`);
+                const data = await res.json();
+                
+                if(res.ok) {
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('stats-section').classList.remove('hidden');
+                    
+                    // Update Balance with Animation
+                    balText.textContent = data.balance.toLocaleString();
+                    
+                    // Math for $1.25 / 1M tokens
+                    const dollars = (data.balance / 1000000) * 1.25;
+                    dollarText.textContent = `$${dollars.toFixed(2)} Credit Available`;
+                } else {
+                    alert("Authentication Failed: " + (data.detail || "Invalid Key"));
+                }
+            } catch (err) {
+                alert("Neural Link Error: Check your connection or CORS settings.");
             }
         }
     </script>
