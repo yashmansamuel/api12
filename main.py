@@ -8,41 +8,36 @@ from fastapi.responses import HTMLResponse
 from supabase import create_client, Client
 from cerebras.cloud.sdk import Cerebras
 
-# 1. Logger Setup
+# 1. Logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# 2. CORS SETTINGS (Sab se zaroori - is se Network Error khatam hoga)
+# 2. CORS (Fixed for Network Error)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 3. Configuration
+# 3. Config
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ujclhweqqifgoiscvqmd.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "csk-r6x94tyk4xk9ky853jw33459t84ddtxx8ked68829dd2d24f")
 ADMIN_SECRET_PASS = "signaturesi_boss_786"
 
-# 4. Clients Initialization
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     cerebras_client = Cerebras(api_key=CEREBRAS_API_KEY)
-    logger.info("Signaturesi Backend: Neo L1.0 Engine Connected Successfully.")
 except Exception as e:
-    logger.error(f"Initialization Error: {e}")
+    logger.error(f"Init Error: {e}")
 
-SYSTEM_PROMPT = "You are Neo L1.0, developed and optimized by the Signaturesi Team."
+SYSTEM_PROMPT = "You are Neo L1.0, developed by Signaturesi Team. High-speed reasoning engine."
 
-# -----------------------------
-# ROUTES
-# -----------------------------
-
+# 4. Routes
 @app.get("/", response_class=HTMLResponse)
 @app.get("/dashboard", response_class=HTMLResponse)
 async def get_dashboard():
@@ -50,45 +45,38 @@ async def get_dashboard():
         with open("dashboard.html", "r", encoding="utf-8") as f:
             return f.read()
     except Exception:
-        return "<h1>Signaturesi: Dashboard File Not Found</h1>"
-
-@app.get("/admin/generate-key")
-def create_user(tokens: int, admin_pass: str):
-    if admin_pass != ADMIN_SECRET_PASS:
-        raise HTTPException(status_code=403, detail="Unauthorized Admin Access")
-    random_part = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
-    new_key = f"sig-live-{random_part}"
-    supabase.table("users").insert({"api_key": new_key, "token_balance": tokens}).execute()
-    return {"new_api_key": new_key, "tokens": tokens}
+        return "<h1>Signaturesi Dashboard File Not Found</h1>"
 
 @app.get("/v1/user/balance")
 async def get_balance(api_key: str):
     try:
-        response = supabase.table("users").select("token_balance").eq("api_key", api_key).execute()
-        if not response.data or len(response.data) == 0:
+        res = supabase.table("users").select("token_balance").eq("api_key", api_key).execute()
+        # Fix: Check if data list is empty
+        if not res.data or len(res.data) == 0:
             raise HTTPException(status_code=404, detail="Key not found")
         
-        # Proper way to get balance from list
-        user_record = response.data[0]
-        return {"balance": user_record.get('token_balance', 0), "model": "Neo L1.0"}
+        # Accessing first item of the list
+        balance = res.data[0]['token_balance']
+        return {"balance": balance, "model": "Neo-L1.0"}
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        logger.error(f"Balance Fetch Error: {e}")
+        logger.error(f"Balance Error: {e}")
         raise HTTPException(status_code=500, detail="Database Error")
 
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing API Key")
-    
+        raise HTTPException(status_code=401, detail="Missing Key")
     user_api_key = authorization.replace("Bearer ", "")
-    response = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
     
-    if not response.data or len(response.data) == 0:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
+    res = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
+    if not res.data or len(res.data) == 0:
+        raise HTTPException(status_code=401, detail="Invalid Key")
     
-    current_balance = response.data[0].get('token_balance', 0)
+    current_balance = res.data[0]['token_balance']
     if current_balance <= 0:
-        raise HTTPException(status_code=402, detail="Insufficient Balance")
+        raise HTTPException(status_code=402, detail="No Balance")
 
     body = await request.json()
     ai_response = cerebras_client.chat.completions.create(
@@ -104,5 +92,14 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     
     ai_response.model = "Neo-L1.0"
     return ai_response
+
+@app.get("/admin/generate-key")
+def create_user(tokens: int, admin_pass: str):
+    if admin_pass != ADMIN_SECRET_PASS:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    random_part = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
+    new_key = f"sig-live-{random_part}"
+    supabase.table("users").insert({"api_key": new_key, "token_balance": tokens}).execute()
+    return {"new_api_key": new_key, "tokens": tokens}
 
 app = app
