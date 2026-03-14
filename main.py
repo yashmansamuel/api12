@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # --- CONFIGURATION (Environment Variables) ---
-# Vercel Dashboard mein ye 3 keys add karein:
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ujclhweqqifgoiscvqmd.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "csk-r6x94tyk4xk9ky853jw33459t84ddtxx8ked68829dd2d24f")
@@ -24,9 +23,9 @@ try:
 except Exception as e:
     logger.error(f"Initialization Error: {e}")
 
-# --- THE ULTIMATE PREMIUM PROMPT FOR NEO L1.0 ---
-SYSTEM_PROMPT = (
-   Role:
+# --- FIX: MULTI-LINE STRING WITH TRIPLE QUOTES ---
+SYSTEM_PROMPT = """
+Role:
 You are Neo L1.0, a high-performance AI reasoning system developed and hyper-optimized by the Signaturesi Team.
 
 Mission:
@@ -74,12 +73,11 @@ Branding:
 
 Goal:
 Provide GPT-5.2-style perception across multi-step reasoning, coding, and research, while staying cost-effective at $1.25 per 1M tokens.
-)
-
+"""
 
 @app.get("/")
 def home():
-    return {"status": "Online", "brand": "Signaturesi", "message": "API is Live on Vercel"}
+    return {"status": "Online", "brand": "Signaturesi", "message": "Neo L1.0 API is Live on Vercel"}
 
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
@@ -89,9 +87,8 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     
     user_api_key = authorization.replace("Bearer ", "")
 
-    # 2. Database Fetch (Stable Version)
+    # 2. Database Fetch
     try:
-        # User ka record dhoondein
         result = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
         
         if not result.data or len(result.data) == 0:
@@ -102,7 +99,7 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
         
     except Exception as e:
         logger.error(f"Supabase Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database connection error")
 
     if current_balance <= 0:
         raise HTTPException(status_code=402, detail="Insufficient Balance")
@@ -113,11 +110,13 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     except:
         raise HTTPException(status_code=400, detail="Invalid JSON Body")
     
-    # 4. Cerebras Call
+    # 4. Cerebras Call (With your Prompt and Performance Settings)
     try:
         ai_response = cerebras_client.chat.completions.create(
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + body.get("messages", []),
             model="llama3.1-8b",
+            temperature=0.4, # Aapka Performance Setting
+            top_p=0.9,       # Aapka Performance Setting
             stream=False
         )
 
@@ -125,15 +124,19 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
         tokens_used = ai_response.usage.total_tokens
         new_balance = current_balance - tokens_used
         
-        # Balance update in Supabase
+        # Update in Supabase
         supabase.table("users").update({"token_balance": new_balance}).eq("api_key", user_api_key).execute()
         
-        logger.info(f"Key: {user_api_key} | Used: {tokens_used} | Remaining: {new_balance}")
+        logger.info(f"Key: {user_api_key} | Used: {tokens_used} | New Balance: {new_balance}")
+        
+        # Override model name for branding in response
+        ai_response.model = "Neo-L1.0"
+        
         return ai_response
 
     except Exception as e:
         logger.error(f"Cerebras API Error: {e}")
         raise HTTPException(status_code=500, detail="AI Inference Failed")
 
-# Vercel ke liye 'app' ko expose karna zaroori hai
+# Vercel integration
 app = app
