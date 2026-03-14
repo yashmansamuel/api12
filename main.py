@@ -49,24 +49,26 @@ async def get_dashboard():
     except Exception:
         return "<h1>Dashboard File Not Found</h1><p>Check if dashboard.html is in your GitHub repo.</p>"
 
-# 6. Balance API (Fixed & Stable)
+# 6. Balance API (Fixed Response Handling)
 @app.get("/v1/user/balance")
 async def get_balance(api_key: str):
     try:
-        # Single ki jagah execute use karke list check karein
+        # Query execute karein
         response = supabase.table("users").select("token_balance").eq("api_key", api_key).execute()
         
+        # Check if data exists
         if not response.data or len(response.data) == 0:
             raise HTTPException(status_code=404, detail="Key not found")
         
-        # Safe extraction from list
-        user_record = response.data[0]
+        # FIX: response.data ek LIST hoti hai, pehla item uthayen
+        user_record = response.data[0] 
         balance = user_record.get('token_balance', 0)
+        
         return {"balance": balance, "model": "Neo L1.0"}
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Balance Error: {e}")
+        logger.error(f"Balance Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Database Error")
 
 # 7. Admin: Key Generator
@@ -79,7 +81,7 @@ def create_user(tokens: int, admin_pass: str):
     supabase.table("users").insert({"api_key": new_key, "token_balance": tokens}).execute()
     return {"new_api_key": new_key, "tokens": tokens}
 
-# 8. Chat Endpoint (Stable Balance Check)
+# 8. Chat Endpoint (Fixed Response Handling)
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -91,7 +93,10 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     if not res.data or len(res.data) == 0:
         raise HTTPException(status_code=401, detail="Invalid Key")
     
-    current_balance = res.data[0].get('token_balance', 0)
+    # FIX: List se record uthayen
+    user_record = res.data[0]
+    current_balance = user_record.get('token_balance', 0)
+    
     if current_balance <= 0:
         raise HTTPException(status_code=402, detail="No Balance")
 
@@ -105,6 +110,8 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
 
     tokens_used = ai_response.usage.total_tokens
     new_balance = current_balance - tokens_used
+    
+    # Balance update
     supabase.table("users").update({"token_balance": new_balance}).eq("api_key", user_api_key).execute()
     
     ai_response.model = "Neo-L1.0"
