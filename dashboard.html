@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEO L1.0 | Signaturesi Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
-        @import url('https://fonts.googleapis.com');
         body { background-color: #020617; font-family: 'Space Grotesk', sans-serif; color: #f8fafc; }
         .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .neon-glow { text-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8; color: #38bdf8; }
@@ -27,7 +25,7 @@
             <button onclick="authSystem()" class="btn-glow w-full bg-sky-600 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all">Connect Neural Link</button>
         </div>
 
-        <div id="dash-section" class="hidden space-y-8 animate-fade-in">
+        <div id="dash-section" class="hidden space-y-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="glass p-8 rounded-[2rem] border-l-4 border-sky-500">
                     <span class="text-slate-400 text-sm font-bold uppercase">Token Reserves</span>
@@ -40,7 +38,7 @@
                     <p>Latency: <b class="text-emerald-400"> < 0.05ms</b></p>
                 </div>
             </div>
-            <button onclick="location.reload()" class="text-slate-500 text-sm italic">Log out from Signaturesi</button>
+            <button onclick="location.reload()" class="text-slate-500 text-sm italic">Log out</button>
         </div>
     </div>
 
@@ -48,15 +46,20 @@
         async function authSystem() {
             const key = document.getElementById('userKey').value.trim();
             try {
-                const response = await fetch(`https://api12-pxoi.vercel.app{key}`);
+                const response = await fetch(`https://api12-pxoi.vercel.app/v1/user/balance?api_key=${key}`);
                 const data = await response.json();
                 if(response.ok) {
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('dash-section').classList.remove('hidden');
                     document.getElementById('tokenText').textContent = data.balance.toLocaleString();
                     document.getElementById('valText').textContent = `$${((data.balance / 1000000) * 1.25).toFixed(2)} Credits`;
-                } else { alert("Key Error: " + data.detail); }
-            } catch (err) { alert("Network Error: Make sure CORS is enabled."); }
+                } else {
+                    alert("Key Error: " + data.detail);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network Error: Make sure CORS is enabled.");
+            }
         }
     </script>
 </body>
