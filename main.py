@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# 2. CORS SETTINGS (Zaroori for Dashboard & HTML Connection)
+# 2. CORS SETTINGS (Sab se zaroori - is se Network Error khatam hoga)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,18 +37,13 @@ try:
 except Exception as e:
     logger.error(f"Initialization Error: {e}")
 
-# 5. SYSTEM PROMPT (Neo L1.0 Premium)
-SYSTEM_PROMPT = """
-Role: You are Neo L1.0, a high-performance AI reasoning system by Signaturesi Team.
-Mission: Provide enterprise-grade answers in coding and logic.
-Branding: "I am Neo L1.0, powered by Signaturesi technology."
-"""
+SYSTEM_PROMPT = "You are Neo L1.0, developed and optimized by the Signaturesi Team."
 
 # -----------------------------
 # ROUTES
 # -----------------------------
 
-# A. Dashboard & Home Route
+# A. Dashboard & Home Route (Directly shows HTML)
 @app.get("/", response_class=HTMLResponse)
 @app.get("/dashboard", response_class=HTMLResponse)
 async def get_dashboard():
@@ -56,7 +51,7 @@ async def get_dashboard():
         with open("dashboard.html", "r") as f:
             return f.read()
     except Exception:
-        return "<h1>Dashboard File Not Found</h1><p>Make sure dashboard.html is in your GitHub repo.</p>"
+        return "<h1>Signaturesi: Dashboard File Not Found</h1><p>Upload dashboard.html to GitHub.</p>"
 
 # B. Admin: Key Generator
 @app.get("/admin/generate-key")
@@ -71,24 +66,26 @@ def create_user(tokens: int, admin_pass: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# C. User: Balance API (For Dashboard)
+# C. User: Balance API (Stable Version for Dashboard)
 @app.get("/v1/user/balance")
 async def get_balance(api_key: str):
     try:
         response = supabase.table("users").select("token_balance").eq("api_key", api_key).execute()
-        if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=404, detail="Key not found")
         
-        # Accessing the first record
-        balance_data = response.data[0]
-        return {"balance": balance_data['token_balance'], "model": "Neo L1.0"}
-    except HTTPException as e:
-        raise e
+        # Check if response has data and it's not empty
+        if not response.data or len(response.data) == 0:
+            raise HTTPException(status_code=404, detail="Key not found in Signaturesi Database")
+        
+        # Proper way to get balance from list
+        user_record = response.data[0]
+        return {"balance": user_record.get('token_balance', 0), "model": "Neo L1.0"}
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        logger.error(f"Balance Error: {e}")
-        raise HTTPException(status_code=500, detail="Database Error")
+        logger.error(f"Balance Fetch Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# D. Chat Endpoint (Core AI)
+# D. Chat Endpoint (Core AI Engine)
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -99,11 +96,12 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     try:
         response = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
         if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=401, detail="Key not found")
+            raise HTTPException(status_code=401, detail="Invalid API Key")
         
-        current_balance = response.data[0].get('token_balance', 0)
+        user_record = response.data[0]
+        current_balance = user_record.get('token_balance', 0)
     except Exception:
-        raise HTTPException(status_code=500, detail="DB Error")
+        raise HTTPException(status_code=500, detail="Database Access Error")
 
     if current_balance <= 0:
         raise HTTPException(status_code=402, detail="Insufficient Balance")
@@ -125,8 +123,8 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
         ai_response.model = "Neo-L1.0"
         return ai_response
     except Exception as e:
-        logger.error(f"Inference Error: {e}")
-        raise HTTPException(status_code=500, detail="Neo L1.0 Engine Failed")
+        logger.error(f"Neo L1.0 Inference Error: {e}")
+        raise HTTPException(status_code=500, detail="AI Engine Failed")
 
-# Vercel Integration
+# Vercel Deployment Export
 app = app
