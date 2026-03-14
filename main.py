@@ -20,20 +20,11 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # * sab domains allow karega
+    allow_origins=["*"],  # allow all domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Optional: Explicit CORS headers for Vercel / serverless fallback
-@app.middleware("http")
-async def add_cors_headers(request, call_next):
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
-    return response
 
 # -------------------------
 # 3️⃣ Configuration
@@ -113,12 +104,12 @@ def create_user(tokens: int, admin_pass: str):
 # -------------------------
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
-    # 1. Check Authorization Header
+    # 1. Authorization
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing API Key")
     user_api_key = authorization.replace("Bearer ", "")
 
-    # 2. Fetch User Token Balance
+    # 2. Fetch Balance
     try:
         res = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
         if not res.data or len(res.data) == 0:
