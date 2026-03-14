@@ -2,104 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signaturesi | Developer Dashboard</title>
+    <title>Signaturesi | Neo L1.0 Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
-        @import url('https://fonts.googleapis.com');
-        body { background: #020617; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .neon-border { border: 1px solid #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.1); }
-        .sidebar-link:hover { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body class="flex min-h-screen">
-
-    <!-- Sidebar -->
-    <div class="w-64 bg-[#0f172a] border-r border-slate-800 p-6 hidden md:block">
-        <div class="flex items-center gap-3 mb-12">
-            <div class="w-8 h-8 bg-sky-500 rounded-lg shadow-lg shadow-sky-500/50"></div>
-            <h1 class="font-bold text-xl">Signaturesi</h1>
-        </div>
-        <nav class="space-y-2">
-            <a href="#" class="sidebar-link block p-3 rounded-xl text-sky-400 font-medium bg-sky-500/10"><i class="fas fa-key mr-2"></i> API Keys</a>
-            <a href="#" class="sidebar-link block p-3 rounded-xl text-slate-400 transition"><i class="fas fa-chart-pie mr-2"></i> Usage</a>
-            <a href="#" class="sidebar-link block p-3 rounded-xl text-slate-400 transition"><i class="fas fa-file-code mr-2"></i> Docs</a>
-        </nav>
-    </div>
-
-    <!-- Main Content -->
-    <div class="flex-1 p-6 md:p-10">
-        <!-- Auth Box (Initial) -->
-        <div id="auth-section" class="max-w-md mx-auto mt-20 glass p-8 rounded-3xl text-center neon-border">
-            <h2 class="text-2xl font-bold mb-2">Signaturesi Portal</h2>
-            <p class="text-slate-500 text-sm mb-6">Enter your API key to access Neo L1.0 stats.</p>
-            <input type="password" id="userKeyInput" class="w-full bg-black border border-slate-800 p-4 rounded-xl mb-4 text-center focus:border-sky-500 outline-none" placeholder="sig-live-xxxxxxxxxxxx">
-            <button onclick="loadStats()" class="w-full bg-sky-600 hover:bg-sky-500 p-4 rounded-xl font-bold transition shadow-lg shadow-sky-600/20">Login to Dashboard</button>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="max-w-md w-full glass p-10 rounded-3xl shadow-2xl text-center">
+        <h1 class="text-3xl font-bold text-sky-400 mb-2">Neo L1.0</h1>
+        <p class="text-slate-500 mb-8 text-sm uppercase">Developer Dashboard</p>
+        
+        <div id="login-area">
+            <input type="password" id="userKey" class="w-full bg-black border border-slate-700 p-4 rounded-xl mb-4 text-center" placeholder="Enter API Key">
+            <button onclick="checkBal()" class="w-full bg-sky-600 hover:bg-sky-500 py-4 rounded-xl font-bold transition">Check Balance</button>
         </div>
 
-        <!-- Dashboard (Hidden) -->
-        <div id="dashboard-section" class="hidden">
-            <header class="flex justify-between items-center mb-10">
-                <div>
-                    <h2 class="text-3xl font-bold">Developer Dashboard</h2>
-                    <p class="text-slate-400">Model: <span class="text-sky-400">Neo L1.0 (GPT-120B)</span></p>
-                </div>
-                <button onclick="location.reload()" class="bg-slate-900 p-3 rounded-xl border border-slate-800 hover:bg-red-500/10 transition"><i class="fas fa-sign-out-alt"></i></button>
-            </header>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                <div class="glass p-8 rounded-3xl border-l-4 border-sky-500">
-                    <p class="text-slate-500 text-xs uppercase tracking-widest mb-1">Available Balance</p>
-                    <h3 id="displayBalance" class="text-4xl font-bold text-white">0</h3>
-                    <p class="text-xs text-slate-500 mt-2">Rate: $1.25 per 1,000,000 tokens</p>
-                </div>
-                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
-                    <p class="text-slate-500 text-xs uppercase tracking-widest mb-1">Model Status</p>
-                    <h3 class="text-4xl font-bold text-emerald-400 tracking-tighter">OPERATIONAL</h3>
-                    <p class="text-xs text-slate-500 mt-2">Latency: < 0.05s (Ultra-Fast)</p>
-                </div>
+        <div id="stats-area" class="hidden space-y-6">
+            <div class="p-6 bg-slate-900 rounded-2xl border border-slate-800">
+                <p class="text-xs text-slate-500 mb-1">LIVE BALANCE</p>
+                <h2 id="bal-text" class="text-4xl font-bold text-emerald-400">0</h2>
             </div>
-
-            <!-- API Key Row -->
-            <div class="glass p-8 rounded-3xl mb-8">
-                <h4 class="font-bold mb-4">Your Active API Key</h4>
-                <div class="flex gap-4 items-center bg-black/50 p-4 rounded-xl border border-slate-800">
-                    <code id="activeKey" class="text-sky-400 font-mono flex-1">****************</code>
-                    <button onclick="copyKey()" class="text-slate-400 hover:text-white transition"><i class="far fa-copy"></i></button>
-                </div>
-            </div>
+            <button onclick="location.reload()" class="text-slate-500 text-xs">Sign Out</button>
         </div>
     </div>
 
     <script>
-        async function loadStats() {
-            const key = document.getElementById('userKeyInput').value.trim();
-            if(!key) return alert("Bhai, Key to daal!");
-
-            try {
-                // Hamare naye endpoint se balance uthayega
-                const response = await fetch(`https://api12-pxoi.vercel.app{key}`);
-                const data = await response.json();
-
-                if(response.ok) {
-                    document.getElementById('auth-section').classList.add('hidden');
-                    document.getElementById('dashboard-section').classList.remove('hidden');
-                    document.getElementById('displayBalance').textContent = data.balance.toLocaleString() + " Tokens";
-                    document.getElementById('activeKey').textContent = key;
-                } else {
-                    alert("Invalid Key! Signaturesi database mein nahi mili.");
-                }
-            } catch (err) {
-                alert("Connection Error! Check if main.py has CORS enabled.");
+        async function checkBal() {
+            const key = document.getElementById('userKey').value;
+            const res = await fetch(`https://api12-pxoi.vercel.app{key}`);
+            const data = await res.json();
+            if(res.ok) {
+                document.getElementById('login-area').classList.add('hidden');
+                document.getElementById('stats-area').classList.remove('hidden');
+                document.getElementById('bal-text').textContent = data.balance.toLocaleString() + " Tokens";
+            } else {
+                alert("Invalid Key!");
             }
-        }
-
-        function copyKey() {
-            const keyText = document.getElementById('activeKey').textContent;
-            navigator.clipboard.writeText(keyText);
-            alert("API Key Copied!");
         }
     </script>
 </body>
