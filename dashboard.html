@@ -8,114 +8,55 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
         @import url('https://fonts.googleapis.com');
-        body { background-color: #020617; font-family: 'Space Grotesk', sans-serif; color: #f8fafc; overflow-x: hidden; }
-        .neon-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 100%); }
-        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); }
+        body { background-color: #020617; font-family: 'Space Grotesk', sans-serif; color: #f8fafc; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .neon-glow { text-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8; color: #38bdf8; }
         .btn-glow:hover { box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); transform: scale(1.02); }
-        .card-border { border-left: 5px solid #38bdf8; transition: 0.3s; }
-        .card-border:hover { border-left-width: 10px; background: rgba(56, 189, 248, 0.05); }
     </style>
 </head>
 <body class="p-4 md:p-12">
-    <div class="neon-bg"></div>
-
     <div class="max-w-4xl mx-auto">
-        <!-- Logo & Brand -->
         <div class="text-center mb-12">
             <h1 class="text-5xl font-bold tracking-tighter mb-2">NEO <span class="neon-glow">L1.0</span></h1>
             <p class="text-slate-500 uppercase tracking-[0.5em] text-xs">Signaturesi Intelligence System</p>
         </div>
 
-        <!-- Login Card -->
         <div id="login-section" class="glass p-10 rounded-[2.5rem] text-center max-w-md mx-auto">
-            <div class="w-20 h-20 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-fingerprint text-4xl text-sky-400"></i>
-            </div>
-            <h2 class="text-2xl font-bold mb-8">System Authentication</h2>
-            <input type="password" id="userKey" 
-                class="w-full bg-slate-950 border border-slate-800 p-5 rounded-2xl text-center mb-6 focus:outline-none focus:border-sky-500 transition-all text-sky-300 font-mono tracking-widest"
-                placeholder="sig-live-xxxxxxxxxxxx">
-            <button onclick="authSystem()" class="btn-glow w-full bg-sky-600 py-5 rounded-2xl font-bold text-white uppercase tracking-widest transition-all">
-                Connect Neural Link
-            </button>
+            <h2 class="text-2xl font-bold mb-8">Authentication</h2>
+            <input type="password" id="userKey" class="w-full bg-slate-950 border border-slate-800 p-5 rounded-2xl text-center mb-6 focus:border-sky-500 outline-none text-sky-300 font-mono" placeholder="sig-live-xxxxxxxxxxxx">
+            <button onclick="authSystem()" class="btn-glow w-full bg-sky-600 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all">Connect Neural Link</button>
         </div>
 
-        <!-- Dashboard View (Hidden) -->
         <div id="dash-section" class="hidden space-y-8 animate-fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Balance Card -->
-                <div class="glass p-8 rounded-[2rem] card-border">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-slate-400 text-sm font-bold uppercase">Token Reserves</span>
-                        <i class="fas fa-bolt text-amber-400"></i>
-                    </div>
-                    <h2 id="tokenText" class="text-5xl font-bold mb-2">0</h2>
-                    <p class="text-slate-500 text-sm">Estimated Value: <span id="valText" class="text-emerald-400">$0.00</span></p>
+                <div class="glass p-8 rounded-[2rem] border-l-4 border-sky-500">
+                    <span class="text-slate-400 text-sm font-bold uppercase">Token Reserves</span>
+                    <h2 id="tokenText" class="text-5xl font-bold my-4">0</h2>
+                    <p id="valText" class="text-emerald-400 font-bold">$0.00 Credits</p>
                 </div>
-
-                <!-- Model Stats -->
                 <div class="glass p-8 rounded-[2.5rem]">
-                    <h4 class="text-slate-500 text-sm font-bold uppercase mb-6">Inference Status</h4>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Engine:</span>
-                            <span class="font-bold">Neo L1.0 (GPT-120B)</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Latency:</span>
-                            <span class="text-emerald-400 font-bold"> < 0.05ms</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Security:</span>
-                            <span class="text-sky-400 font-bold tracking-widest text-xs">ENCRYPTED</span>
-                        </div>
-                    </div>
+                    <h4 class="text-slate-500 text-sm font-bold uppercase mb-6">Status</h4>
+                    <p>Engine: <b>Neo L1.0</b></p>
+                    <p>Latency: <b class="text-emerald-400"> < 0.05ms</b></p>
                 </div>
             </div>
-
-            <!-- API Details Row -->
-            <div class="glass p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-terminal text-sky-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-500 uppercase tracking-widest">Base Endpoint</p>
-                        <p class="text-sm font-mono text-slate-300">https://api12-pxoi.vercel.app</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <button onclick="location.reload()" class="bg-slate-800 p-4 rounded-xl hover:bg-red-500/20 transition-all text-slate-400 hover:text-red-400">
-                        <i class="fas fa-power-off"></i>
-                    </button>
-                </div>
-            </div>
+            <button onclick="location.reload()" class="text-slate-500 text-sm italic">Log out from Signaturesi</button>
         </div>
     </div>
 
     <script>
         async function authSystem() {
             const key = document.getElementById('userKey').value.trim();
-            if(!key) return alert("Bhai, Access Key daal pehle!");
-
             try {
-                const response = await fetch(`https://api12-pxoi.vercel.app/user/balance?api_key=${key}`);
+                const response = await fetch(`https://api12-pxoi.vercel.app{key}`);
                 const data = await response.json();
-
                 if(response.ok) {
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('dash-section').classList.remove('hidden');
-                    
                     document.getElementById('tokenText').textContent = data.balance.toLocaleString();
-                    const dollars = (data.balance / 1000000) * 1.25;
-                    document.getElementById('valText').textContent = `$${dollars.toFixed(2)} Credits`;
-                } else {
-                    alert("Authentication Failed: Invalid Signaturesi Link");
-                }
-            } catch (err) {
-                alert("Network Error: Make sure CORS is enabled in main.py");
-            }
+                    document.getElementById('valText').textContent = `$${((data.balance / 1000000) * 1.25).toFixed(2)} Credits`;
+                } else { alert("Key Error: " + data.detail); }
+            } catch (err) { alert("Network Error: Make sure CORS is enabled."); }
         }
     </script>
 </body>
