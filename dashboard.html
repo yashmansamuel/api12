@@ -20,7 +20,7 @@
 <body class="p-4 md:p-12 min-h-screen flex flex-col items-center">
 
     <div class="max-w-4xl w-full mx-auto">
-        <!-- Logo & Brand -->
+        <!-- Logo -->
         <div class="text-center mb-12">
             <h1 class="text-5xl font-bold tracking-tighter mb-2">NEO <span class="neon-glow">L1.0</span></h1>
             <p class="text-slate-500 uppercase tracking-[0.5em] text-xs">Signaturesi Intelligence System</p>
@@ -41,10 +41,9 @@
             <p class="text-[10px] text-slate-500 mt-4">Authorized Access Only</p>
         </div>
 
-        <!-- Dashboard View (Hidden) -->
+        <!-- Dashboard -->
         <div id="dash-section" class="hidden space-y-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Balance Card -->
                 <div class="glass p-8 rounded-[2rem] card-border">
                     <div class="flex justify-between items-center mb-6">
                         <span class="text-slate-400 text-sm font-bold uppercase tracking-wider">Token Reserves</span>
@@ -54,7 +53,6 @@
                     <p class="text-slate-500 text-sm italic">Account Balance Verified</p>
                 </div>
 
-                <!-- Model Stats -->
                 <div class="glass p-8 rounded-[2.5rem]">
                     <h4 class="text-slate-500 text-sm font-bold uppercase mb-6 tracking-widest">Inference Status</h4>
                     <div class="space-y-4">
@@ -74,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- API Details Row -->
             <div class="glass p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
@@ -119,7 +116,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert("Network Error: Make sure CORS is enabled in main.py and your Vercel URL is correct.");
+                alert("Neural Link Error: Check your connection or CORS settings.");
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.textContent = "Connect Neural Link";
