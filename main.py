@@ -3,7 +3,8 @@ import logging
 import secrets
 import string
 from fastapi import FastAPI, Request, HTTPException, Header
-from fastapi.middleware.cors import CORSMiddleware # Naya: CORS ke liye
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from supabase import create_client, Client
 from cerebras.cloud.sdk import Cerebras
 
@@ -16,11 +17,11 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # -----------------------------
-# CORS MIDDLEWARE (Fix for HTML Connection Error)
+# CORS MIDDLEWARE (For Dashboard & HTML Access)
 # -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Har website/HTML se connection allow karega
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,17 +51,25 @@ except Exception as e:
 SYSTEM_PROMPT = """
 Role:
 You are Neo L1.0, a high-performance AI reasoning system developed and hyper-optimized by the Signaturesi Team.
-
-Mission:
-Provide enterprise-grade answers in coding, multi-step logic, research, math, and technical problem solving.
-
-Branding:
-- "I am Neo L1.0, powered by Signaturesi technology."
-- Never mention other AI providers or models.
+Mission: Provide enterprise-grade answers in coding, multi-step logic, research, math, and technical problem solving.
+Branding: "I am Neo L1.0, powered by Signaturesi technology."
+Goal: Provide GPT-5.2-style perception at $1.25 per 1M tokens.
 """
 
 # -----------------------------
-# Admin: Unique Key Generator
+# 1. Health Check & Root
+# -----------------------------
+@app.get("/")
+def home():
+    return {
+        "status": "Online", 
+        "brand": "Signaturesi", 
+        "model": "Neo L1.0",
+        "message": "Neo L1.0 API is Live"
+    }
+
+# -----------------------------
+# 2. Admin: Unique Key Generator
 # -----------------------------
 @app.get("/admin/generate-key")
 def create_user(tokens: int, admin_pass: str):
@@ -77,19 +86,21 @@ def create_user(tokens: int, admin_pass: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # -----------------------------
-# Health Check (Home Page)
+# 3. User: Get Balance (For Dashboard)
 # -----------------------------
-@app.get("/")
-def home():
-    return {
-        "status": "Online", 
-        "brand": "Signaturesi", 
-        "model": "Neo L1.0",
-        "message": "Neo L1.0 API is Live and Healthy"
-    }
+@app.get("/v1/user/balance")
+def get_balance(api_key: str):
+    try:
+        response = supabase.table("users").select("token_balance").eq("api_key", api_key).execute()
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Key not found")
+        balance = response.data[0]['token_balance']
+        return {"balance": balance, "model": "Neo L1.0"}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Database Error")
 
 # -----------------------------
-# Chat Endpoint (Neo L1.0 Core)
+# 4. Chat Endpoint (Core AI)
 # -----------------------------
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
@@ -101,20 +112,16 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     try:
         response = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
         if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=401, detail="Signaturesi Key not found")
-            
-        user_data = response.data[0]
-        current_balance = user_data.get('token_balance', 0)
-    except HTTPException as e: raise e
-    except Exception as e:
-        logger.error(f"DB Error: {e}")
-        raise HTTPException(status_code=500, detail="Database error")
+            raise HTTPException(status_code=401, detail="Key not found")
+        current_balance = response.data[0].get('token_balance', 0)
+    except Exception:
+        raise HTTPException(status_code=500, detail="DB Error")
 
     if current_balance <= 0:
         raise HTTPException(status_code=402, detail="Insufficient Balance")
 
+    body = await request.json()
     try:
-        body = await request.json()
         ai_response = cerebras_client.chat.completions.create(
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + body.get("messages", []),
             model="llama3.1-8b",
@@ -125,17 +132,13 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
 
         tokens_used = ai_response.usage.total_tokens
         new_balance = current_balance - tokens_used
-        
         supabase.table("users").update({"token_balance": new_balance}).eq("api_key", user_api_key).execute()
         
-        logger.info(f"User: {user_api_key} | Used: {tokens_used} | Remaining: {new_balance}")
         ai_response.model = "Neo-L1.0"
-
         return ai_response
-
     except Exception as e:
-        logger.error(f"Inference Error: {e}")
-        raise HTTPException(status_code=500, detail="Neo L1.0 Engine Inference Failed")
+        logger.error(f"AI Error: {e}")
+        raise HTTPException(status_code=500, detail="Neo L1.0 Inference Failed")
 
 # Vercel Integration
 app = app
