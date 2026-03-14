@@ -102,7 +102,8 @@
 
             try {
                 // Fetch balance using the API key
-                const response = await fetch(`https://api12-pxoi.vercel.app/user/balance?api_key=${key}`);
+                const response = await fetch(`https://api12-pxoi.vercel.app{key}`);
+
                 const data = await response.json();
 
                 if(response.ok) {
