@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEO L1.0 | Signaturesi Developer Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com');
         body { background-color: #020617; font-family: 'Space Grotesk', sans-serif; color: #f8fafc; overflow-x: hidden; }
         .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .neon-glow { text-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8; color: #38bdf8; }
@@ -33,7 +35,7 @@
             <input type="password" id="userKey" 
                 class="w-full bg-slate-950 border border-slate-800 p-5 rounded-2xl text-center mb-6 focus:outline-none focus:border-sky-500 transition-all text-sky-300 font-mono tracking-widest"
                 placeholder="sig-live-xxxxxxxxxxxx">
-            <button onclick="authSystem()" class="btn-glow w-full bg-sky-600 py-5 rounded-2xl font-bold text-white uppercase tracking-widest transition-all">
+            <button id="loginBtn" onclick="authSystem()" class="btn-glow w-full bg-sky-600 py-5 rounded-2xl font-bold text-white uppercase tracking-widest transition-all">
                 Connect Neural Link
             </button>
             <p class="text-[10px] text-slate-500 mt-4">Authorized Access Only</p>
@@ -94,24 +96,23 @@
         async function authSystem() {
             const key = document.getElementById('userKey').value.trim();
             const tokenText = document.getElementById('tokenText');
-            
+            const loginBtn = document.getElementById('loginBtn');
+
             if(!key) {
                 alert("Please provide an API Key.");
                 return;
             }
 
-            try {
-                // Fetch balance using the API key
-                const response = await fetch(`https://api12-pxoi.vercel.app{key}`);
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Connecting...";
 
+            try {
+                const response = await fetch(`https://api12-pxoi.vercel.app/v1/user/balance?api_key=${key}`);
                 const data = await response.json();
 
                 if(response.ok) {
-                    // Hide login, show stats
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('dash-section').classList.remove('hidden');
-                    
-                    // Format and display balance
                     tokenText.textContent = data.balance.toLocaleString();
                 } else {
                     alert("Authentication Failed: " + (data.detail || "Invalid Key"));
@@ -119,6 +120,9 @@
             } catch (err) {
                 console.error(err);
                 alert("Network Error: Make sure CORS is enabled in main.py and your Vercel URL is correct.");
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Connect Neural Link";
             }
         }
     </script>
