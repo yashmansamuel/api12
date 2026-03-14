@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signaturesi | Developer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
+    <style>
+        body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #0f172a; border-right: 1px solid #1e293b; }
+        .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; }
+        .neon-border { border: 1px solid #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <div class="w-64 sidebar p-6 hidden md:block">
+        <div class="flex items-center gap-2 mb-10">
+            <div class="w-8 h-8 bg-sky-500 rounded-md"></div>
+            <h1 class="font-bold text-xl tracking-tight">Signaturesi</h1>
+        </div>
+        <nav class="space-y-4">
+            <a href="#" class="block text-sky-400 font-medium"><i class="fas fa-key mr-2"></i> API Keys</a>
+            <a href="#" class="block text-slate-400 hover:text-white"><i class="fas fa-chart-line mr-2"></i> Usage</a>
+            <a href="#" class="block text-slate-400 hover:text-white"><i class="fas fa-book mr-2"></i> Docs</a>
+            <a href="#" class="block text-slate-400 hover:text-white"><i class="fas fa-cog mr-2"></i> Settings</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+        <header class="flex justify-between items-center mb-10">
+            <h2 class="text-2xl font-bold">API Keys</h2>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-slate-400">Credits: <b class="text-emerald-400">$12.50</b></span>
+                <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700"></div>
+            </div>
+        </header>
+
+        <!-- API Key Section -->
+        <div class="card p-8 mb-8 neon-border">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-1">Your Personal API Key</h3>
+                    <p class="text-sm text-slate-400">Use this key to authenticate your requests to Neo L1.0.</p>
+                </div>
+                <button class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">
+                    + Create New Key
+                </button>
+            </div>
+
+            <div class="flex items-center gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <code class="flex-1 text-sky-400 font-mono">sig-live-L6fG7BPptjGVbguC</code>
+                <button class="text-slate-400 hover:text-white"><i class="far fa-copy"></i></button>
+                <button class="text-slate-400 hover:text-red-400"><i class="far fa-trash-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- Usage & Limits -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card p-6">
+                <h4 class="font-bold mb-4">Token Usage</h4>
+                <div class="w-full bg-slate-800 rounded-full h-2 mb-2">
+                    <div class="bg-sky-500 h-2 rounded-full" style="width: 45%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Used: 4.5M</span>
+                    <span>Limit: 10M</span>
+                </div>
+            </div>
+
+            <div class="card p-6 text-center">
+                <h4 class="font-bold mb-2">Active Model</h4>
+                <div class="text-sky-400 font-mono text-xl mb-1">Neo L1.0</div>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest">Optimized by Signaturesi</p>
+            </div>
+        </div>
+
+        <!-- Integration Guide Quick Link -->
+        <div class="mt-10 p-6 bg-slate-900/50 rounded-2xl border border-dashed border-slate-700">
+            <h4 class="text-sm font-bold mb-2">Quick Integration</h4>
+            <pre class="text-xs text-slate-400 bg-black p-4 rounded-lg">curl https://api12-pxoi.vercel.app \
+  -H "Authorization: Bearer YOUR_KEY"</pre>
+        </div>
+    </div>
+
+</body>
+</html>
