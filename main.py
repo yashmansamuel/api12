@@ -1,5 +1,7 @@
 import os
 import logging
+import secrets
+import string
 from fastapi import FastAPI, Request, HTTPException, Header
 from supabase import create_client, Client
 from cerebras.cloud.sdk import Cerebras
@@ -19,13 +21,16 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ujclhweqqifgoiscvqmd.supabase.
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "csk-r6x94tyk4xk9ky853jw33459t84ddtxx8ked68829dd2d24f")
 
+# Admin Password (Keys banane ke liye)
+ADMIN_SECRET_PASS = "signaturesi_boss_786" 
+
 # -----------------------------
 # Clients Initialization
 # -----------------------------
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     cerebras_client = Cerebras(api_key=CEREBRAS_API_KEY)
-    logger.info("Signaturesi Backend: Neo L1.0 Engine Connected Successfully.")
+    logger.info("Signaturesi Backend: Neo L1.0 Engine Connected.")
 except Exception as e:
     logger.error(f"Initialization Error: {e}")
 
@@ -48,91 +53,74 @@ Reasoning Protocol:
 1. Detect task type (coding / logic / research / analysis)
 2. Break problem into internal logical steps
 3. Perform multi-pass reasoning for consistency
-4. For research tasks:
-   - Integrate optional retrieval context or references
-   - Structure findings clearly
-5. Validate all results internally
-6. Deliver structured final output:
+4. Deliver structured final output:
    Answer → Explanation → Example / Code → References
-
-Coding Standard:
-- Production-ready, secure, optimized code
-- Handle edge cases
-- Include brief expert commentary
-
-Hidden Reasoning (Internal):
-- Step-by-step chain-of-thought
-- Multi-pass reasoning to reduce hallucinations
-- Flag uncertainty and assumptions
-- Route task to task-specific hidden prompt
-
-Post-processing Layer:
-- Correct grammar, formatting, and ambiguous reasoning
-- Enhance clarity and enterprise-grade readability
-
-Performance Settings:
-- Temperature: 0.4
-- Top_p: 0.9
-- Minimize irrelevant output
 
 Branding:
 - "I am Neo L1.0, powered by Signaturesi technology."
-- Never mention other AI providers or models
+- Never mention other AI providers or models.
 
 Goal:
 Provide GPT-5.2-style perception across multi-step reasoning, coding, and research, while staying cost-effective at $1.25 per 1M tokens.
 """
 
 # -----------------------------
-# Health Check (Home Page)
+# Admin: Unique Key Generator
+# -----------------------------
+@app.get("/admin/generate-key")
+def create_user(tokens: int, admin_pass: str):
+    if admin_pass != ADMIN_SECRET_PASS:
+        raise HTTPException(status_code=403, detail="Unauthorized Admin Access")
+    
+    # Random unique key generate karein
+    random_part = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
+    new_key = f"sig-live-{random_part}"
+    
+    try:
+        supabase.table("users").insert({"api_key": new_key, "token_balance": tokens}).execute()
+        return {
+            "status": "Success",
+            "new_api_key": new_key,
+            "tokens_added": tokens,
+            "brand": "Signaturesi",
+            "model": "Neo L1.0"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# -----------------------------
+# Health Check
 # -----------------------------
 @app.get("/")
 def home():
-    return {
-        "status": "Online", 
-        "brand": "Signaturesi", 
-        "model": "Neo L1.0",
-        "message": "Neo L1.0 API is Live and Healthy"
-    }
+    return {"status": "Online", "brand": "Signaturesi", "model": "Neo L1.0"}
 
 # -----------------------------
 # Chat Endpoint (Neo L1.0 Core)
 # -----------------------------
 @app.post("/v1/chat/completions")
 async def chat_proxy(request: Request, authorization: str = Header(None)):
-    # 1. API Key Check
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing Signaturesi API Key")
     
     user_api_key = authorization.replace("Bearer ", "")
 
-    # 2. Fetch User Balance (Bulletproof Version)
+    # 1. Fetch Balance
     try:
         response = supabase.table("users").select("token_balance").eq("api_key", user_api_key).execute()
-        
-        # Check if user exists
         if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=401, detail="Signaturesi Key not found in Database")
-            
-        user_data = response.data[0]
-        current_balance = user_data.get('token_balance', 0)
+            raise HTTPException(status_code=401, detail="Key not found")
         
-    except HTTPException as e:
-        raise e # FastAPI error ko wapas bhej do
-    except Exception as e:
-        logger.error(f"Supabase Connection Error: {e}")
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        # Sahi tarika balance uthane ka
+        current_balance = response.data[0].get('token_balance', 0)
+    except HTTPException as e: raise e
+    except Exception: raise HTTPException(status_code=500, detail="DB Error")
 
     if current_balance <= 0:
-        raise HTTPException(status_code=402, detail="Insufficient Balance in Signaturesi Account")
+        raise HTTPException(status_code=402, detail="Insufficient Balance")
 
-    # 3. Parse JSON Body
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON Body")
-
-    # 4. Cerebras AI Inference (Neo L1.0 Logic)
+    # 2. Parse Body & AI Call
+    body = await request.json()
     try:
         ai_response = cerebras_client.chat.completions.create(
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + body.get("messages", []),
@@ -142,23 +130,17 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
             stream=False
         )
 
-        # 5. Token Deduction
+        # 3. Token Deduction
         tokens_used = ai_response.usage.total_tokens
         new_balance = current_balance - tokens_used
-        
-        # Update Balance in Supabase
         supabase.table("users").update({"token_balance": new_balance}).eq("api_key", user_api_key).execute()
         
-        logger.info(f"User: {user_api_key} | Used: {tokens_used} | Remaining: {new_balance}")
-
-        # 6. Override model name for Final Branding
+        # 4. Branding Override
         ai_response.model = "Neo-L1.0"
-
         return ai_response
 
     except Exception as e:
-        logger.error(f"Cerebras API Error: {e}")
-        raise HTTPException(status_code=500, detail="Neo L1.0 Engine Inference Failed")
+        logger.error(f"Inference Error: {e}")
+        raise HTTPException(status_code=500, detail="Neo L1.0 Engine Failed")
 
-# Vercel Integration
 app = app
