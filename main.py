@@ -11,28 +11,28 @@ from cerebras.cloud.sdk import Cerebras
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Signaturesi Neo L1.0 API")
+app = FastAPI()
 
 # -----------------------------
-# CORS Middleware
+# CORS Middleware (Frontend localhost)
 # -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to specific origin in production
+    allow_origins=["*"],  # ya ["http://127.0.0.1:3000"] for strict
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------
-# Configuration (Environment Variables)
+# Config
 # -----------------------------
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ujclhweqqifgoiscvqmd.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "csk-r6x94tyk4xk9ky853jw33459t84ddtxx8ked68829dd2d24f")
 
 # -----------------------------
-# Clients Initialization
+# Clients Init
 # -----------------------------
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -44,36 +44,44 @@ except Exception as e:
 # -----------------------------
 # SYSTEM PROMPT
 # -----------------------------
-SYSTEM_PROMPT = """
-You are Neo L1.0, a high-performance AI reasoning system.
-Provide enterprise-grade answers in coding, multi-step logic, research, math, and technical problem solving.
-"""
+SYSTEM_PROMPT = "You are Neo L1.0, an advanced reasoning AI..."
 
 # -----------------------------
 # Health Check
 # -----------------------------
 @app.get("/")
 def home():
-    return {
-        "status": "Online",
-        "brand": "Signaturesi",
-        "model": "Neo L1.0",
-        "message": "Neo L1.0 API is Live and Healthy"
-    }
+    return {"status": "Online", "brand": "Signaturesi", "model": "Neo L1.0", "message": "Neo L1.0 API is Live and Healthy"}
 
 # -----------------------------
 # Get User Balance
 # -----------------------------
 @app.get("/v1/user/balance")
-def user_balance(api_key: str):
+def get_balance(api_key: str):
     try:
         response = supabase.table("users").select("token_balance").eq("api_key", api_key).execute()
         if not response.data or len(response.data) == 0:
-            raise HTTPException(status_code=401, detail="API Key not found")
-        return {"balance": response.data[0].get("token_balance", 0)}
+            raise HTTPException(status_code=404, detail="API Key not found")
+        balance = response.data[0].get("token_balance", 0)
+        return {"api_key": api_key, "balance": balance}
     except Exception as e:
         logger.error(f"Supabase Error: {e}")
-        raise HTTPException(status_code=500, detail="Database Error")
+        raise HTTPException(status_code=500, detail="Database error")
+
+# -----------------------------
+# Generate New API Key
+# -----------------------------
+@app.post("/v1/user/new-key")
+def generate_key():
+    import secrets
+    new_key = "sig-live-" + secrets.token_urlsafe(16)
+    # Insert into Supabase with default balance
+    try:
+        supabase.table("users").insert({"api_key": new_key, "token_balance": 1000}).execute()
+        return {"api_key": new_key, "balance": 1000}
+    except Exception as e:
+        logger.error(f"Supabase Insert Error: {e}")
+        raise HTTPException(status_code=500, detail="Cannot create new API key")
 
 # -----------------------------
 # Chat Endpoint
@@ -82,7 +90,7 @@ def user_balance(api_key: str):
 async def chat_proxy(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing API Key")
-    
+
     user_api_key = authorization.replace("Bearer ", "")
 
     # Fetch user balance
@@ -93,18 +101,14 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
         current_balance = response.data[0].get("token_balance", 0)
     except Exception as e:
         logger.error(f"Supabase Error: {e}")
-        raise HTTPException(status_code=500, detail="Database Error")
+        raise HTTPException(status_code=500, detail="Database error")
 
     if current_balance <= 0:
-        raise HTTPException(status_code=402, detail="Insufficient balance")
+        raise HTTPException(status_code=402, detail="Insufficient Balance")
 
     # Parse request JSON
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON Body")
+    body = await request.json()
 
-    # Cerebras inference
     try:
         ai_response = cerebras_client.chat.completions.create(
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + body.get("messages", []),
@@ -117,16 +121,12 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
         tokens_used = ai_response.usage.total_tokens
         new_balance = current_balance - tokens_used
 
-        # Update balance in Supabase
+        # Update balance
         supabase.table("users").update({"token_balance": new_balance}).eq("api_key", user_api_key).execute()
 
-        logger.info(f"User: {user_api_key} | Tokens used: {tokens_used} | Remaining: {new_balance}")
-
-        # Brand override
         ai_response.model = "Neo-L1.0"
-
         return ai_response
 
     except Exception as e:
-        logger.error(f"Cerebras Error: {e}")
-        raise HTTPException(status_code=500, detail="Neo L1.0 Inference Failed")
+        logger.error(f"Cerebras API Error: {e}")
+        raise HTTPException(status_code=500, detail="AI Engine Failed")
