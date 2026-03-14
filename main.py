@@ -44,8 +44,7 @@ except Exception as e:
 # -----------------------------
 # SYSTEM PROMPT
 # -----------------------------
-SYSTEM_PROMPT = "You are Neo L1.0, an flagship model si.
-your creator team is Signaturesi and neo power by Signaturesi. ..."
+SYSTEM_PROMPT = "You are Neo L1.0, ..."
 
 # -----------------------------
 # Health Check
