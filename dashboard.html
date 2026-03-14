@@ -1,127 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEO L1.0 | Signaturesi Developer Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #020617; font-family: 'Space Grotesk', sans-serif; color: #f8fafc; overflow-x: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .neon-glow { text-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8; color: #38bdf8; }
-        .btn-glow:hover { box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); transform: scale(1.02); }
-        .card-border { border-left: 5px solid #38bdf8; transition: 0.3s; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEO L1.0 | Signaturesi Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+body { background-color: #020617; font-family: 'Space Grotesk', sans-serif; color: #f8fafc; }
+.glass { background: rgba(15,23,42,0.6); backdrop-filter: blur(15px); border:1px solid rgba(255,255,255,0.05); }
+.neon-glow { text-shadow:0 0 10px #38bdf8,0 0 20px #38bdf8;color:#38bdf8; }
+.btn-glow:hover { box-shadow:0 0 25px rgba(56,189,248,0.4); transform: scale(1.02); }
+.card-border { border-left:5px solid #38bdf8; transition:0.3s; }
+</style>
 </head>
-<body class="p-4 md:p-12 min-h-screen flex flex-col items-center">
+<body class="p-4 md:p-12 flex flex-col items-center">
 
-    <div class="max-w-4xl w-full mx-auto">
-        <!-- Logo -->
-        <div class="text-center mb-12">
-            <h1 class="text-5xl font-bold tracking-tighter mb-2">NEO <span class="neon-glow">L1.0</span></h1>
-            <p class="text-slate-500 uppercase tracking-[0.5em] text-xs">Signaturesi Intelligence System</p>
-        </div>
-
-        <!-- Login Card -->
-        <div id="login-section" class="glass p-10 rounded-[2.5rem] text-center max-w-md mx-auto shadow-2xl">
-            <div class="w-20 h-20 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fas fa-fingerprint text-4xl text-sky-400"></i>
-            </div>
-            <h2 class="text-2xl font-bold mb-8">System Authentication</h2>
-            <input type="password" id="userKey" 
-                class="w-full bg-slate-950 border border-slate-800 p-5 rounded-2xl text-center mb-6 focus:outline-none focus:border-sky-500 transition-all text-sky-300 font-mono tracking-widest"
-                placeholder="sig-live-xxxxxxxxxxxx">
-            <button id="loginBtn" onclick="authSystem()" class="btn-glow w-full bg-sky-600 py-5 rounded-2xl font-bold text-white uppercase tracking-widest transition-all">
-                Connect Neural Link
-            </button>
-            <p class="text-[10px] text-slate-500 mt-4">Authorized Access Only</p>
-        </div>
-
-        <!-- Dashboard -->
-        <div id="dash-section" class="hidden space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="glass p-8 rounded-[2rem] card-border">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-slate-400 text-sm font-bold uppercase tracking-wider">Token Reserves</span>
-                        <i class="fas fa-bolt text-amber-400"></i>
-                    </div>
-                    <h2 id="tokenText" class="text-5xl font-bold mb-2">0</h2>
-                    <p class="text-slate-500 text-sm italic">Account Balance Verified</p>
-                </div>
-
-                <div class="glass p-8 rounded-[2.5rem]">
-                    <h4 class="text-slate-500 text-sm font-bold uppercase mb-6 tracking-widest">Inference Status</h4>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400 text-sm">Engine:</span>
-                            <span class="font-bold text-sm">Neo L1.0 (GPT-120B)</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400 text-sm">Latency:</span>
-                            <span class="text-emerald-400 font-bold text-sm"> < 0.05ms</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400 text-sm">Provider:</span>
-                            <span class="text-sky-400 font-bold text-xs uppercase">Signaturesi</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-terminal text-sky-400"></i>
-                    </div>
-                    <div class="text-left">
-                        <p class="text-[10px] text-slate-500 uppercase tracking-widest">Global Base URL</p>
-                        <p class="text-sm font-mono text-slate-300">https://api12-pxoi.vercel.app</p>
-                    </div>
-                </div>
-                <button onclick="location.reload()" class="bg-slate-800 px-6 py-3 rounded-xl hover:bg-red-500/20 transition-all text-slate-400 hover:text-red-400 text-sm font-bold">
-                    Disconnect <i class="fas fa-power-off ml-2"></i>
-                </button>
-            </div>
-        </div>
+<div class="max-w-4xl w-full mx-auto">
+    <div class="text-center mb-12">
+        <h1 class="text-5xl font-bold mb-2">NEO <span class="neon-glow">L1.0</span></h1>
+        <p class="text-slate-500 uppercase text-xs tracking-[0.5em]">Signaturesi Intelligence System</p>
     </div>
 
-    <script>
-        async function authSystem() {
-            const key = document.getElementById('userKey').value.trim();
-            const tokenText = document.getElementById('tokenText');
-            const loginBtn = document.getElementById('loginBtn');
+    <div id="login-section" class="glass p-10 rounded-[2.5rem] text-center max-w-md mx-auto shadow-2xl">
+        <h2 class="text-2xl font-bold mb-6">System Authentication</h2>
+        <input type="text" id="userKey" placeholder="sig-live-xxxx" class="w-full p-5 rounded-2xl mb-4 bg-slate-950 border border-slate-800 text-sky-300 font-mono text-center">
+        <button onclick="authSystem()" id="loginBtn" class="btn-glow w-full bg-sky-600 py-4 rounded-2xl text-white font-bold mb-2">Connect Neural Link</button>
+        <button onclick="createApiKey()" class="w-full bg-emerald-600 py-3 rounded-2xl text-white font-bold">Generate New API Key</button>
+        <p class="text-[10px] text-slate-500 mt-4">Authorized Access Only</p>
+    </div>
 
-            if(!key) {
-                alert("Please provide an API Key.");
-                return;
-            }
+    <div id="dash-section" class="hidden space-y-8">
+        <div class="glass p-8 rounded-[2.5rem]">
+            <h2 class="text-3xl font-bold mb-2">Token Balance: <span id="tokenText">0</span></h2>
+            <p class="text-slate-500 text-sm">Your API Key Status</p>
+        </div>
+    </div>
+</div>
 
-            loginBtn.disabled = true;
-            loginBtn.textContent = "Connecting...";
+<script>
+async function authSystem() {
+    const key = document.getElementById('userKey').value.trim();
+    if(!key){ alert("Provide API Key"); return; }
+    const tokenText = document.getElementById('tokenText');
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.disabled=true; loginBtn.textContent="Connecting...";
 
-            try {
-                const response = await fetch(`https://api12-pxoi.vercel.app/v1/user/balance?api_key=${key}`);
-                const data = await response.json();
-
-                if(response.ok) {
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('dash-section').classList.remove('hidden');
-                    tokenText.textContent = data.balance.toLocaleString();
-                } else {
-                    alert("Authentication Failed: " + (data.detail || "Invalid Key"));
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Neural Link Error: Check your connection or CORS settings.");
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = "Connect Neural Link";
-            }
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/v1/user/balance?api_key=${key}`);
+        const data = await res.json();
+        if(res.ok){
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dash-section').classList.remove('hidden');
+            tokenText.textContent = data.balance;
+        } else {
+            alert(data.detail || "Invalid Key");
         }
-    </script>
+    } catch(err){ alert("Cannot connect backend"); console.error(err); }
+    finally{ loginBtn.disabled=false; loginBtn.textContent="Connect Neural Link"; }
+}
+
+async function createApiKey(){
+    try{
+        const res = await fetch(`http://127.0.0.1:8000/v1/user/new-key`, {method:"POST"});
+        const data = await res.json();
+        alert("New API Key: "+data.api_key+"\nBalance: "+data.balance);
+        document.getElementById('userKey').value = data.api_key;
+    }catch(err){ alert("Cannot create API Key"); console.error(err);}
+}
+</script>
+
 </body>
 </html>
